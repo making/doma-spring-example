@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -19,37 +20,37 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @ComponentScan(basePackages = "sample")
 @EnableTransactionManagement
 public class BeanConfig {
-	@Bean
-	public DataSource dataSource() {
-		DataSource dataSource = new EmbeddedDatabaseBuilder()
-				.setType(EmbeddedDatabaseType.H2)
-				.addScript("classpath:/database/schema.sql")
-				.addScript("classpath:/database/dataload.sql").build();
-		return dataSource;
-	}
+    @Bean
+    public DataSource dataSource() {
+        DataSource dataSource = new EmbeddedDatabaseBuilder()
+                .setType(EmbeddedDatabaseType.H2)
+                .addScript("classpath:/database/schema.sql")
+                .addScript("classpath:/database/dataload.sql").build();
+        return dataSource;
+    }
 
-	@Bean
-	public PlatformTransactionManager transactionManager() {
-		return new DataSourceTransactionManager(dataSource());
-	}
+    @Bean
+    public PlatformTransactionManager transactionManager() {
+        return new DataSourceTransactionManager(dataSource());
+    }
 
-	@Bean
-	public Dialect dialect() {
-		return new H2Dialect();
-	}
+    @Bean
+    public Dialect dialect() {
+        return new H2Dialect();
+    }
 
-	@Bean
-	public Config domaConfig() {
-		return new DomaAbstractConfig() {
-			@Override
-			public Dialect getDialect() {
-				return dialect();
-			}
+    @Bean
+    public Config domaConfig() {
+        return new DomaAbstractConfig() {
+            @Override
+            public Dialect getDialect() {
+                return dialect();
+            }
 
-			@Override
-			public DataSource getDataSource() {
-				return dataSource();
-			}
-		};
-	}
+            @Override
+            public DataSource getDataSource() {
+                return new TransactionAwareDataSourceProxy(dataSource());
+            }
+        };
+    }
 }
